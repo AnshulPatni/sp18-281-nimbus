@@ -1,4 +1,4 @@
-*** Team Nimbus Team Meeting #1 ***
+# Team Nimbus Team Meeting #1
 
 
 ## Meeting Details:
