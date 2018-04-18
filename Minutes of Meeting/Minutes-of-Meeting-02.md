@@ -1,4 +1,4 @@
-*** Team Nimbus Team Meeting #2 ***
+# Team Nimbus Team Meeting #2
 
 
 ## Meeting Details:
@@ -7,7 +7,7 @@ Location - MLK Library, San Jose State University
   
 
 ## Meeting Organizer:
-Abhineet Gupta
+Anshul Patni
   
 
 ## Attendees:
