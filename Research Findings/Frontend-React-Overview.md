@@ -18,3 +18,16 @@ Another notable feature is the use of a "virtual Document Object Model", or "vir
 Lifecycle methods are various methods that come built in with ReactJS. They allow the developer to process data at various points in the lifecycle of a React app. For example
 * shouldComponentUpdate is a lifecycle method that tells Javascript to update the component using a boolean variable.
 * componentWillMount is a lifecycle method that tells Javascript to set up certain data before a component mounts (is inserted into the virtual DOM).
+* componentDidMount is a lifecycle method which is similar to componentWillMount except that it runs after the render method and can be used to add JSON data and to define properties and states.
+* render is the most important lifecycle method and the only required one in any component. The render method is what connects with the JSX and this method can display its own JSX.
+
+#### JSX
+
+JavaScript XML (JSX) is an extension to the JavaScript language syntax[12]. Similar in appearance to HTML, JSX provides a way to structure component rendering using syntax familiar to many (if not most) developers. React components are typically written using JSX, although they do not have to be (components may also be written in pure JavaScript). JSX is similar to another extension syntax created by Facebook for PHP, XHP.
+
+
+
+### References
+
+* https://el-tramo.be/blog/react-go-gae/
+* https://en.wikipedia.org/wiki/React_(JavaScript_library)
