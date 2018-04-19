@@ -17,7 +17,7 @@ import (
 // MongoDB Config
 var mongodb_server = "localhost:27017"
 var mongodb_database = "cmpe281"
-var mongodb_collection = "starbucks"
+var mongodb_collection = "desserts"
 
 
 // NewServer configures and returns a Server.
@@ -35,6 +35,7 @@ func NewServer() *negroni.Negroni {
 // API Routes
 func initRoutes(mx *mux.Router, formatter *render.Render) {
 	mx.HandleFunc("/homepage", homepageHandler(formatter)).Methods("GET")
+	mx.HandleFunc("/inventory", inventoryHandler(formatter)).Methods("GET")
 }
 
 // Helper Functions
@@ -49,5 +50,25 @@ func failOnError(err error, msg string) {
 func homepageHandler(formatter *render.Render) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		formatter.JSON(w, http.StatusOK, struct{ Test string }{"Welcome to Starbucks!"})
+	}
+}
+
+// API returns entire inventory
+func inventoryHandler(formatter *render.Render) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		session, err := mgo.Dial(mongodb_server)
+        if err != nil {
+                panic(err)
+        }
+        defer session.Close()
+        session.SetMode(mgo.Monotonic, true)
+        c := session.DB(mongodb_database).C(mongodb_collection)
+        var result bson.M
+        err = c.Find(bson.M{}).One(&result)
+        if err != nil {
+                log.Fatal(err)
+        }
+        fmt.Println("Inventory details:", result )
+		formatter.JSON(w, http.StatusOK, result)
 	}
 }
