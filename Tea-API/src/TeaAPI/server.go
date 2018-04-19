@@ -42,6 +42,8 @@ func NewServer() *negroni.Negroni {
 // API Routes
 func initRoutes(mx *mux.Router, formatter *render.Render) {
 	mx.HandleFunc("/", homepageHandler(formatter)).Methods("GET")
+	mx.HandleFunc("/inventorySandwhich", inventoryTea(formatter)).Methods("GET")
+	mx.HandleFunc("/cartItemsSandwhich", cartHandlerTea(formatter)).Methods("GET")
 }
 
 
