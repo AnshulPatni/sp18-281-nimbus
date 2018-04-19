@@ -62,3 +62,51 @@ func homepageHandler(formatter *render.Render) http.HandlerFunc {
 		formatter.JSON(w, http.StatusOK, struct{ Test string }{"Welcome to Starbucks Tea Section!"})
 	}
 }
+
+//API returns  inventory with status 0 
+func inventoryTea(formatter *render.Render) http.HandlerFunc{
+	return func(w http.ResponseWriter, req *http.Request) {
+		//establishing session with DB
+		fmt.Println("Inventory details:")
+		session, err := mgo.Dial(mongodb_server)
+        if err != nil {
+                panic(err)
+        }
+        defer session.Close()
+        session.SetMode(mgo.Monotonic, true)
+        c := session.DB(mongodb_database).C(mongodb_collection)
+
+		var result []*bson.M
+
+        err = c.Find(bson.M{"items":"espresso"}).All(&result)
+
+        fmt.Println("Inventory details:", result )
+        formatter.JSON(w, http.StatusOK, result)
+
+	}
+}
+
+
+//API returns  inventory with status 1
+func cartHandlerTea(formatter *render.Render) http.HandlerFunc{
+
+	return func(w http.ResponseWriter, req *http.Request) {
+
+		//establishing session with DB
+		session, err := mgo.Dial(mongodb_server)
+        if err != nil {
+                panic(err)
+        }
+        defer session.Close()
+        session.SetMode(mgo.Monotonic, true)
+        c := session.DB(mongodb_database).C(mongodb_collection)
+
+		var result []*bson.M
+
+        err = c.Find(bson.M{"status":1}).All(&result)
+
+        fmt.Println("Inventory details:", result )
+        formatter.JSON(w, http.StatusOK, result)
+
+	}
+}
