@@ -8,3 +8,13 @@ React’s standard flow is to start with an empty HTML template from the server,
 #### One-way data flow
 
 Properties (commonly, props) are passed to a component from the parent component. Components receive props as a single set of immutable values[10] (a JavaScript object). Whenever any prop value changes, the component's render function is called allowing the component to display the change.
+
+#### Virtual DOM
+
+Another notable feature is the use of a "virtual Document Object Model", or "virtual DOM". React creates an in-memory data structure cache, computes the resulting differences, and then updates the browser's displayed DOM efficiently.[11] This allows the programmer to write code as if the entire page is rendered on each change, while the React libraries only render sub components that actually change.
+
+#### Lifecycle Methods
+
+Lifecycle methods are various methods that come built in with ReactJS. They allow the developer to process data at various points in the lifecycle of a React app. For example
+* shouldComponentUpdate is a lifecycle method that tells Javascript to update the component using a boolean variable.
+* componentWillMount is a lifecycle method that tells Javascript to set up certain data before a component mounts (is inserted into the virtual DOM).
