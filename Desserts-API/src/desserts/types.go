@@ -1,6 +1,6 @@
 package main
 
-type gumballMachine struct {
+type starbucks struct {
 	item        string 	
 	count   	int    	
 	cost 		int	    
