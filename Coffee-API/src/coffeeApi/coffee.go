@@ -1,3 +1,10 @@
+
+
+/*
+	Starbucks API in Go
+
+*/
+
 package main
 
 import (
@@ -17,7 +24,7 @@ import (
 
 // MongoDB Config
 var mongodb_server = "localhost:27017"
-var mongodb_database = "cmpe_coffee"
+var mongodb_database = "cmpe_Coffee"
 var mongodb_collection = "starbucks_Coffee"
 
 
@@ -38,9 +45,16 @@ func NewServer() *negroni.Negroni {
 
 // API Routes
 func initRoutes(mx *mux.Router, formatter *render.Render) {
-	mx.HandleFunc("/coffee", homepageHandlerCoffee(formatter)).Methods("GET")
+	mx.HandleFunc("/Coffee", homepageHandlerCoffee(formatter)).Methods("GET")
 	mx.HandleFunc("/inventoryCoffee", inventoryHandlerCoffee(formatter)).Methods("GET")
 	mx.HandleFunc("/cartItemsCoffee", cartHandlerCoffee(formatter)).Methods("GET")
+	mx.HandleFunc("/searchInventoryCoffee", searchInventoryHandlerCoffee(formatter)).Methods("GET")
+	//Below - PUT : Status 0 - 1
+	mx.HandleFunc("/addToCartCoffee", starbucksAddToCartHandlerCoffee(formatter)).Methods("PUT")
+	//Below - PUT : Status 1 -0
+	mx.HandleFunc("/processOrdersCoffee", starbucksProcessOrdersHandlerCoffee(formatter)).Methods("PUT")
+	//Below - Increase Likes
+	mx.HandleFunc("/likeCoffee", likeHandlerCoffee(formatter)).Methods("PUT")
 
 }
 
@@ -57,7 +71,7 @@ func failOnError(err error, msg string) {
 
 
 // Ping Application
-func homepageHandlerCoffee(formatter *render.Render) http.HandlerFunc{
+func homepageHandlerCoffee(formatter *render.Render) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		formatter.JSON(w, http.StatusOK, struct{ Test string }{"Welcome to Starbucks Coffee!"})
 	}
@@ -65,7 +79,7 @@ func homepageHandlerCoffee(formatter *render.Render) http.HandlerFunc{
 
 
 //API returns  inventory for Status 0 items  to populate menu -
-func inventoryHandlerCoffee(formatter *render.Render) http.HandlerFunc{
+func inventoryHandlerCoffee(formatter *render.Render) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		//establishing session with DB
 		fmt.Println("Inventory details:")
@@ -79,7 +93,7 @@ func inventoryHandlerCoffee(formatter *render.Render) http.HandlerFunc{
 
 		var result []*bson.M
 
-        err = c.Find(bson.M{"items":"mocha"}).All(&result)
+        err = c.Find(bson.M{"status":0}).All(&result)
 
         fmt.Println("Inventory details:", result )
         formatter.JSON(w, http.StatusOK, result)
@@ -89,7 +103,7 @@ func inventoryHandlerCoffee(formatter *render.Render) http.HandlerFunc{
 
 
 //API returns  inventory for Status 1 items  to populate cart -
-func cartHandlerCoffee(formatter *render.Render) http.HandlerFunc{
+func cartHandlerCoffee(formatter *render.Render) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, req *http.Request) {
 
@@ -113,3 +127,55 @@ func cartHandlerCoffee(formatter *render.Render) http.HandlerFunc{
 
 	}
 }
+
+
+// API seacrhes inventory for a specific item and returns it
+func searchInventoryHandlerCoffee(formatter *render.Render) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		session, err := mgo.Dial(mongodb_server)
+        if err != nil {
+                panic(err)
+        }
+        defer session.Close()
+        session.SetMode(mgo.Monotonic, true)
+        c := session.DB(mongodb_database).C(mongodb_collection)
+        var result bson.M
+
+        err = c.Find(bson.M{"item" : "mocha"}).One(&result)
+
+        if err != nil {
+                log.Fatal(err)
+        }
+        fmt.Println("Inventory details:", result )
+		formatter.JSON(w, http.StatusOK, result)
+	}
+}
+
+
+//API adds item to cart - Updates status from 0 to 1
+func starbucksAddToCartHandlerCoffee(formatter *render.Render) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+
+		//parsing request bpdy from client and storing in array of bsons
+			var simulation []bson.M
+			json.NewDecoder(req.Body).Decode(&simulation)
+	    	//fmt.Println("Added items to cart: ", m.starbucks)
+
+		//establishing session with DB
+			session, err := mgo.Dial(mongodb_server)
+	        if err != nil {
+	                panic(err)
+	        }
+	        defer session.Close()
+	        session.SetMode(mgo.Monotonic, true)
+	        c := session.DB(mongodb_database).C(mongodb_collection)
+
+	        var simulation []bson.M
+	        err = c.Find(bson.M{"status":0}).All(&simulation)
+	        if err != nil {
+			log.Fatal(err)
+
+	        }
+
+		formatter.JSON(w, http.StatusOK, simulation)
+	}
