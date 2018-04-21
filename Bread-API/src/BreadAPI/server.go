@@ -111,3 +111,30 @@ func cartHandlerBreads(formatter *render.Render) http.HandlerFunc{
 
 	}
 }
+//Add to cart
+func starbucksAddToCartHandlerBreads(formatter *render.Render) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+
+		
+			var sim []bson.M
+			json.NewDecoder(req.Body).Decode(&simulation)		
+	    	//fmt.Println("Added items to cart: ", m.starbucks)
+
+		//establishing session with DB
+			session, err := mgo.Dial(mongodb_server)
+	        if err != nil {
+	                panic(err)
+	        }
+	        defer session.Close()
+	        session.SetMode(mgo.Monotonic, true)
+	        c := session.DB(mongodb_database).C(mongodb_collection)
+	  		
+	        var simulation []bson.M
+	        err = c.Find(bson.M{"status":0}).All(&sim)
+	        if err != nil {
+			log.Fatal(err)
+			
+	        } 
+
+		formatter.JSON(w, http.StatusOK, sim)
+	}
