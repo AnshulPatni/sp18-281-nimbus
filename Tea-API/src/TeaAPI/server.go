@@ -1,3 +1,4 @@
+
 /*
 	Starbucks API in Go 
 
@@ -38,14 +39,17 @@ func NewServer() *negroni.Negroni {
 }
 
 
-
 // API Routes
 func initRoutes(mx *mux.Router, formatter *render.Render) {
 	mx.HandleFunc("/", homepageHandler(formatter)).Methods("GET")
-	mx.HandleFunc("/inventorySandwhich", inventoryTea(formatter)).Methods("GET")
-	mx.HandleFunc("/cartItemsSandwhich", cartHandlerTea(formatter)).Methods("GET")
-}
+	mx.HandleFunc("/inventory", inventoryTea(formatter)).Methods("GET")
+	mx.HandleFunc("/cartItemsTeas", cartHandlerTea(formatter)).Methods("GET")
+	mx.HandleFunc("/searchInventoryTeas", searchInventoryTea(formatter)).Methods("GET")
+	//Below - PUT : Status 0 - 1
+	mx.HandleFunc("/updateTea", UpdateTeas(formatter)).Methods("PUT")
+	
 
+}
 
 
 // Helper Functions
@@ -112,3 +116,53 @@ func cartHandlerTea(formatter *render.Render) http.HandlerFunc{
 
 	}
 }
+
+
+// API seacrhes inventory for a specific item and returns it
+func searchInventoryTea(formatter *render.Render) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		session, err := mgo.Dial(mongodb_server)
+        if err != nil {
+                panic(err)
+        }
+        defer session.Close()
+        session.SetMode(mgo.Monotonic, true)
+        c := session.DB(mongodb_database).C(mongodb_collection)
+        var result bson.M
+
+        err = c.Find(bson.M{"item" : "latte"}).One(&result)
+
+        if err != nil {
+                log.Fatal(err)
+        }
+        fmt.Println("Inventory details:", result )
+		formatter.JSON(w, http.StatusOK, result)
+	}
+}
+
+
+//API adds item to cart - Updates status from 0 to 1
+func UpdateTeas(formatter *render.Render) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+
+		
+			var lat []bson.M
+			json.NewDecoder(req.Body).Decode(&simulation)		
+	    	
+			session, err := mgo.Dial(mongodb_server)
+	        if err != nil {
+	                panic(err)
+	        }
+	        defer session.Close()
+	        session.SetMode(mgo.Monotonic, true)
+	        c := session.DB(mongodb_database).C(mongodb_collection)
+	  		
+	        var lat []bson.M
+	        err = c.Find(bson.M{"status":0}).All(&lat)
+	        if err != nil {
+			log.Fatal(err)
+			
+	        } 
+
+		formatter.JSON(w, http.StatusOK, lat)
+	}
