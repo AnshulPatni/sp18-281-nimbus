@@ -46,6 +46,8 @@ func initRoutes(mx *mux.Router, formatter *render.Render) {
 
 	mx.HandleFunc("/inventorySmoothies", inventoryHandlerSmoothies(formatter)).Methods("GET")
 	mx.HandleFunc("/searchInventorySmoothies", searchInventoryHandlerSmoothies(formatter)).Methods("GET")
+	mx.HandleFunc("/addToCartSmoothies", starbucksAddToCartHandlerSmoothies(formatter)).Methods("PUT")
+	mx.HandleFunc("/cartItemsSmoothies", cartHandlerSmoothies(formatter)).Methods("GET")
 
 }
 
@@ -115,3 +117,91 @@ func searchInventoryHandlerSmoothies(formatter *render.Render) http.HandlerFunc 
 }
 
 
+//API adds item to cart - Updates status from 0 to 1
+func starbucksAddToCartHandlerSmoothies(formatter *render.Render) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+
+		//parsing request bpdy from client and storing in array of bsons
+			var simulation []bson.M
+			json.NewDecoder(req.Body).Decode(&simulation)		
+	    	//fmt.Println("Added items to cart: ", m.starbucks)
+
+		//establishing session with DB
+			session, err := mgo.Dial(mongodb_server)
+	        if err != nil {
+	                panic(err)
+	        }
+	        defer session.Close()
+	        session.SetMode(mgo.Monotonic, true)
+	        c := session.DB(mongodb_database).C(mongodb_collection)
+	  		
+
+	  		//this is just for testing purposes. It is a simulation of the request body from the client.
+	        // var simulation []bson.M
+	        // err = c.Find(bson.M{"status":0}).All(&simulation)
+	        // if err != nil {
+	        //         log.Fatal(err)
+	        // } 
+
+	        //traversing through request body and updating each bson based on condition.
+	   		 for _, element := range simulation {
+	   		 	for key, value := range element {
+
+    				fmt.Println(key, value)
+    				if(key == "item"){
+    					fmt.Println("Retrieved item ", value)
+
+    					query := bson.M{"item":value}
+		        		change := bson.M{"$set": bson.M{ "status" : 1}}
+
+			        	err = c.Update(query, change)
+			        	if err != nil {
+			                log.Fatal(err)
+		        		}
+    				}
+
+
+  				}
+
+
+	   		 }
+
+	   		//this is our result
+	        var finalresults []bson.M
+	        err = c.Find(bson.M{"status":1}).All(&finalresults)
+	        if err != nil {
+	                log.Fatal(err)
+	        } 
+	       	   
+	        fmt.Println("Items added to cart:", finalresults )
+			formatter.JSON(w, http.StatusOK, finalresults)
+		
+	}
+}
+
+//API returns  inventory for Status 1 items  to populate cart - 
+func cartHandlerSmoothies(formatter *render.Render) http.HandlerFunc {
+
+
+	return func(w http.ResponseWriter, req *http.Request) {
+
+		//establishing session with DB
+		session, err := mgo.Dial(mongodb_server)
+        if err != nil {
+                panic(err)
+        }
+        defer session.Close()
+        session.SetMode(mgo.Monotonic, true)
+        c := session.DB(mongodb_database).C(mongodb_collection)
+
+		var result []*bson.M
+
+        err = c.Find(bson.M{"status":1}).All(&result)
+
+        fmt.Println("Inventory details:", result )
+        formatter.JSON(w, http.StatusOK, result)
+
+	
+
+	}
+}
