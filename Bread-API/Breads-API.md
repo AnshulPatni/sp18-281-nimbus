@@ -10,3 +10,9 @@ Description : API retrieves menu item searched by user
 URL : /searchInventoryBreads
 Method : GET
 Response Codes : 200(OK), 401(Webpage doesn’t exist), 500(Internal server error)
+
+3. **Title** : starbucksAddToCartHandlerBreads
+I.	Description : API adds selected items to cart
+II.	URL : /addToCartBreads
+III.	Method : PUT
+IV.	Response Codes : 200(OK), 401(Webpage doesn’t exist), 500(Internal server error)
