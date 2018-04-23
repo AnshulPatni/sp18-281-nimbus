@@ -35,7 +35,8 @@ func NewServer() *negroni.Negroni {
 // API Routes
 func initRoutes(mx *mux.Router, formatter *render.Render) {
 	mx.HandleFunc("/homepage", homepageHandler(formatter)).Methods("GET")
-	mx.HandleFunc("/inventory", inventoryHandler(formatter)).Methods("GET")
+	mx.HandleFunc("/inventoryDesserts", inventoryHandler(formatter)).Methods("GET")
+	mx.HandleFunc("/cartItemsDesserts", cartHandlerDesserts(formatter)).Methods("GET")
 }
 
 // Helper Functions
@@ -70,5 +71,27 @@ func inventoryHandler(formatter *render.Render) http.HandlerFunc {
         }
         fmt.Println("Inventory details:", result )
 		formatter.JSON(w, http.StatusOK, result)
+	}
+}
+
+func cartHandlerDesserts(formatter *render.Render) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, req *http.Request) {
+
+		session, err := mgo.Dial(mongodb_server)
+	    if err != nil {
+	            panic(err)
+	    }
+	    defer session.Close()
+	    session.SetMode(mgo.Monotonic, true)
+	    c := session.DB(mongodb_database).C(mongodb_collection)
+
+		var result []*bson.M
+
+	    err = c.Find(bson.M{"status":1}).All(&result)
+
+	    fmt.Println("Inventory details:", result )
+	    formatter.JSON(w, http.StatusOK, result)
+
 	}
 }
