@@ -51,11 +51,6 @@ func initRoutes(mx *mux.Router, formatter *render.Render) {
 	mx.HandleFunc("/searchInventoryCoffee", searchInventoryHandlerCoffee(formatter)).Methods("GET")
 	//Below - PUT : Status 0 - 1
 	mx.HandleFunc("/addToCartCoffee", starbucksAddToCartHandlerCoffee(formatter)).Methods("PUT")
-	//Below - PUT : Status 1 -0
-	mx.HandleFunc("/processOrdersCoffee", starbucksProcessOrdersHandlerCoffee(formatter)).Methods("PUT")
-	//Below - Increase Likes
-	mx.HandleFunc("/likeCoffee", likeHandlerCoffee(formatter)).Methods("PUT")
-
 }
 
 
@@ -73,7 +68,7 @@ func failOnError(err error, msg string) {
 // Ping Application
 func homepageHandlerCoffee(formatter *render.Render) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		formatter.JSON(w, http.StatusOK, struct{ Test string }{"Welcome to Starbucks Coffee!"})
+		formatter.JSON(w, http.StatusOK, struct{ Test string }{"Welcome to Starbucks Dessert!"})
 	}
 }
 
@@ -152,6 +147,7 @@ func searchInventoryHandlerCoffee(formatter *render.Render) http.HandlerFunc {
 }
 
 
+
 //API adds item to cart - Updates status from 0 to 1
 func starbucksAddToCartHandlerCoffee(formatter *render.Render) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
@@ -170,12 +166,36 @@ func starbucksAddToCartHandlerCoffee(formatter *render.Render) http.HandlerFunc 
 	        session.SetMode(mgo.Monotonic, true)
 	        c := session.DB(mongodb_database).C(mongodb_collection)
 
-	        var simulation []bson.M
-	        err = c.Find(bson.M{"status":0}).All(&simulation)
-	        if err != nil {
-			log.Fatal(err)
 
+	  		//this is just for testing purposes. It is a simulation of the request body from the client.
+	        // var simulation []bson.M
+	        // err = c.Find(bson.M{"status":0}).All(&simulation)
+	        // if err != nil {
+	        //         log.Fatal(err)
+	        // }
+
+	        //traversing throuhg request body and updating each bson based on condition.
+	        for _, element := range simulation {
+	        	fmt.Println("Item status changing from 0 to 1  :", element )
+	        	query := bson.M{"status":0}
+	        	change := bson.M{"$set": bson.M{ "status" : 1}}
+
+	        	err = c.Update(query, change)
+	        	if err != nil {
+	                log.Fatal(err)
+	        	}
+
+	   		 }
+
+	   		//this is our result
+	        var results []bson.M
+	        err = c.Find(bson.M{"status":1}).All(&results)
+	        if err != nil {
+	                log.Fatal(err)
 	        }
 
-		formatter.JSON(w, http.StatusOK, simulation)
+	        fmt.Println("Items added to cart:", results )
+			formatter.JSON(w, http.StatusOK, results)
+
+
 	}
