@@ -16,3 +16,9 @@ I.	Description : API adds selected items to cart
 II.	URL : /addToCartBreads
 III.	Method : PUT
 IV.	Response Codes : 200(OK), 401(Webpage doesn’t exist), 500(Internal server error)
+
+4. **Title** : cartHandlerBreads
+I.	Description : API retrieves items  that have been added to cart
+II.	URL : /cartItemsBreads
+III.	Method : GET
+IV.	Response Codes : 200(OK), 401(Webpage doesn’t exist), 500(Internal server error)
