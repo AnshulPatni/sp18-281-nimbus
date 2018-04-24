@@ -145,24 +145,51 @@ func searchInventoryTea(formatter *render.Render) http.HandlerFunc {
 func UpdateTeas(formatter *render.Render) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 
-		
-			var lat []bson.M
-			json.NewDecoder(req.Body).Decode(&simulation)		
-	    	
-			session, err := mgo.Dial(mongodb_server)
-	        if err != nil {
-	                panic(err)
-	        }
-	        defer session.Close()
-	        session.SetMode(mgo.Monotonic, true)
-	        c := session.DB(mongodb_database).C(mongodb_collection)
-	  		
-	        var lat []bson.M
-	        err = c.Find(bson.M{"status":0}).All(&lat)
-	        if err != nil {
-			log.Fatal(err)
-			
-	        } 
 
-		formatter.JSON(w, http.StatusOK, lat)
+			//parsing request bpdy from client and storing in array of bsons
+				var simulation []bson.M
+				json.NewDecoder(req.Body).Decode(&simulation)		
+				//fmt.Println("Added items to cart: ", m.starbucks)
+	
+			//establishing session with DB
+				session, err := mgo.Dial(mongodb_server)
+				if err != nil {
+						panic(err)
+				}
+				defer session.Close()
+				session.SetMode(mgo.Monotonic, true)
+				c := session.DB(mongodb_database).C(mongodb_collection)
+				  
+	
+				  //this is just for testing purposes. It is a simulation of the request body from the client.
+				// var simulation []bson.M
+				// err = c.Find(bson.M{"status":0}).All(&simulation)
+				// if err != nil {
+				//         log.Fatal(err)
+				// } 
+	
+				//traversing throuhg request body and updating each bson based on condition.
+				for _, elem := range simulation {
+					fmt.Println("Item status changing from 0 to 1  :", elem )
+					query := bson.M{"status":0}
+					change := bson.M{"$set": bson.M{ "status" : 1}}
+	
+					err = c.Update(query, change)
+					if err != nil {
+						log.Fatal(err)
+					}
+	
+					}
+	
+				   //this is our result
+				var resu []bson.M
+				err = c.Find(bson.M{"status":1}).All(&resu)
+				if err != nil {
+						log.Fatal(err)
+				} 
+					  
+				fmt.Println("Items added to cart:", resu)
+				formatter.JSON(w, http.StatusOK, resu)
+	
 	}
+}
