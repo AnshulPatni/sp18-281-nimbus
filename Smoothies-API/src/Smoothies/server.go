@@ -48,6 +48,10 @@ func initRoutes(mx *mux.Router, formatter *render.Render) {
 	mx.HandleFunc("/searchInventorySmoothies", searchInventoryHandlerSmoothies(formatter)).Methods("GET")
 	mx.HandleFunc("/addToCartSmoothies", starbucksAddToCartHandlerSmoothies(formatter)).Methods("PUT")
 	mx.HandleFunc("/cartItemsSmoothies", cartHandlerSmoothies(formatter)).Methods("GET")
+		//Below - PUT : Status 1 -0 
+	mx.HandleFunc("/processOrdersSmoothies", starbucksProcessOrdersHandlerSmoothies(formatter)).Methods("PUT")
+	//Below - Increase Likes
+	mx.HandleFunc("/likeIncreaseSmoothies/{item},{likes}", likeHandlerSmoothies(formatter)).Methods("PUT")
 
 }
 
@@ -204,4 +208,87 @@ func cartHandlerSmoothies(formatter *render.Render) http.HandlerFunc {
 	
 
 	}
+}
+
+//API processes items in cart - Updates status from 1 to 0
+func starbucksProcessOrdersHandlerSmoothies(formatter *render.Render) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {		
+
+
+		//establishing session with DB
+			session, err := mgo.Dial(mongodb_server)
+	        if err != nil {
+	                panic(err)
+	        }
+	        defer session.Close()
+	        session.SetMode(mgo.Monotonic, true)
+	        c := session.DB(mongodb_database).C(mongodb_collection)
+	  		
+
+	  		//this is just for testing purposes. It is a simulation of the request body from the client.
+	        var sim []bson.M
+	        err = c.Find(bson.M{ "status" : 1}).All(&sim)
+	        if err != nil {
+	                log.Fatal(err)
+	        } 
+
+	        //travering throuhg request body and updating each bson based on condition.
+	        for _, ele := range sim {
+	        	fmt.Println("Item status changing from 1 to 0 :", ele )
+	        	query := bson.M{"status" : 1}
+	        	change := bson.M{"$set": bson.M{ "status" : 0}}
+
+	        	err = c.Update(query, change)
+	        	if err != nil {
+	                log.Fatal(err)
+	        	}	
+
+	        }	 
+	       	   
+	        fmt.Println("Items processed:", sim )
+			formatter.JSON(w, http.StatusOK, sim)	
+		
+	}
+}
+
+
+//API takes in current number of likes and item liked -> returns updated like count(like+1)
+func likeHandlerSmoothies(formatter *render.Render) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+
+
+		//parsing request string for value of current likes 
+		params := mux.Vars(req)
+		var likes string = params["likes"]
+		var item string = params["item"]
+		fmt.Println( "Item liked: ", item )
+		fmt.Println( "Total likes: ", likes )
+
+
+		
+
+		session, err := mgo.Dial(mongodb_server)
+        if err != nil {
+                panic(err)
+        }
+        defer session.Close()
+        session.SetMode(mgo.Monotonic, true)
+        c := session.DB(mongodb_database).C(mongodb_collection)
+
+        //converting likes - string to int
+        i,err := strconv.Atoi(likes)
+        if err != nil {
+	          log.Fatal(err)
+	    }	
+
+        query := bson.M{"item" : item}
+	    change := bson.M{"$set": bson.M{ "likes" : i+1 }}
+
+	    err = c.Update(query, change)
+	    if err != nil {
+	          log.Fatal(err)
+	    }	
+
+	}	
+
 }
