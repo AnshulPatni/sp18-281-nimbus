@@ -115,9 +115,9 @@ func cartHandlerBreads(formatter *render.Render) http.HandlerFunc{
 func starbucksAddToCartHandlerBreads(formatter *render.Render) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 
-		
+		//parsing request bpdy from client and storing in array of bsons
 			var sim []bson.M
-			json.NewDecoder(req.Body).Decode(&simulation)		
+			json.NewDecoder(req.Body).Decode(&sim)		
 	    	//fmt.Println("Added items to cart: ", m.starbucks)
 
 		//establishing session with DB
@@ -129,12 +129,36 @@ func starbucksAddToCartHandlerBreads(formatter *render.Render) http.HandlerFunc 
 	        session.SetMode(mgo.Monotonic, true)
 	        c := session.DB(mongodb_database).C(mongodb_collection)
 	  		
-	        var simulation []bson.M
-	        err = c.Find(bson.M{"status":0}).All(&sim)
-	        if err != nil {
-			log.Fatal(err)
-			
-	        } 
 
-		formatter.JSON(w, http.StatusOK, sim)
+	  		//testing. It is a simulation of the request body from the client.
+	        // var sim []bson.M
+	        // err = c.Find(bson.M{"status":0}).All(&simulation)
+	        // if err != nil {
+	        //         log.Fatal(err)
+	        // } 
+
+	        //traversing throuhg request body and updating each bson based on condition.
+	        for _, element := range simulation {
+	        	fmt.Println("Item status changing from 0 to 1  :", element )
+	        	query := bson.M{"status":0}
+	        	change := bson.M{"$set": bson.M{ "status" : 1}}
+
+	        	err = c.Update(query, change)
+	        	if err != nil {
+	                log.Fatal(err)
+	        	}
+
+	   		 }
+
+	   		//this is our result
+	        var results []bson.M
+	        err = c.Find(bson.M{"status":1}).All(&results)
+	        if err != nil {
+	                log.Fatal(err)
+	        } 
+	       	   
+	        fmt.Println("Items added to cart:", results )
+			formatter.JSON(w, http.StatusOK, results)
+
+		
 	}
