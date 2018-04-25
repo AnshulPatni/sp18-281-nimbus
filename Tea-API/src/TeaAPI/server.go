@@ -47,6 +47,7 @@ func initRoutes(mx *mux.Router, formatter *render.Render) {
 	mx.HandleFunc("/searchInventoryTeas", searchInventoryTea(formatter)).Methods("GET")
 	//Below - PUT : Status 0 - 1
 	mx.HandleFunc("/updateTea", UpdateTeas(formatter)).Methods("PUT")
+	mx.HandleFunc("/processOrdersTea", TeasUpdateProcess(formatter)).Methods("PUT")
 	
 
 }
@@ -191,5 +192,56 @@ func UpdateTeas(formatter *render.Render) http.HandlerFunc {
 				fmt.Println("Items added to cart:", resu)
 				formatter.JSON(w, http.StatusOK, resu)
 	
+	}
+}
+
+//API processes items in cart - Updates status from 1 to 0
+func TeasUpdateProcess(formatter *render.Render) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+
+		//parsing request bpdy from client and storing in array of bsons
+			// var sim []bson.M
+	  //   	json.NewDecoder(req.Body).Decode(&sim)		
+	    	// fmt.Println("Update Gumball Inventory To: ", m.CountGumballs)
+
+		//establishing session with DB
+			session, err := mgo.Dial(mongodb_server)
+	        if err != nil {
+	                panic(err)
+	        }
+	        defer session.Close()
+	        session.SetMode(mgo.Monotonic, true)
+	        c := session.DB(mongodb_database).C(mongodb_collection)
+	  		
+
+	  		//this is just for testing purposes. It is a simulation of the request body from the client.
+	        var sim []bson.M
+	        err = c.Find(bson.M{"status":1}).All(&sim)
+	        if err != nil {
+	                log.Fatal(err)
+	        } 
+
+	        //travering throuhg request body and updating each bson based on condition.
+	        for _, ele := range sim {
+	        	fmt.Println("Item status changing from 1 to 0 :", ele )
+	        	query := bson.M{"status":1}
+	        	change := bson.M{"$set": bson.M{ "status" : 0}}
+
+	        	err = c.Update(query, change)
+	        	if err != nil {
+	                log.Fatal(err)
+	        	}	
+
+	        }	
+
+	        var results []bson.M
+	        err = c.Find(bson.M{"status":0}).All(&results)
+	        if err != nil {
+	                log.Fatal(err)
+	        } 
+	       	   
+	        fmt.Println("Items processed:", results )
+			formatter.JSON(w, http.StatusOK, results)	
+		
 	}
 }
