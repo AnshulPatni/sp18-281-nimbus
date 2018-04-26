@@ -69,6 +69,7 @@ func failOnError(err error, msg string) {
 
 
 //API returns  inventory for Status 0 items  to populate menu - 
+
 func inventoryHandlerSmoothies(formatter *render.Render) http.HandlerFunc {
 
 
@@ -99,6 +100,7 @@ func inventoryHandlerSmoothies(formatter *render.Render) http.HandlerFunc {
 
 
 // API seacrhes inventory for a specific item and returns it
+
 func searchInventoryHandlerSmoothies(formatter *render.Render) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		session, err := mgo.Dial(mongodb_server)
@@ -122,6 +124,7 @@ func searchInventoryHandlerSmoothies(formatter *render.Render) http.HandlerFunc 
 
 
 //API adds item to cart - Updates status from 0 to 1
+
 func starbucksAddToCartHandlerSmoothies(formatter *render.Render) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 
@@ -183,7 +186,8 @@ func starbucksAddToCartHandlerSmoothies(formatter *render.Render) http.HandlerFu
 	}
 }
 
-//API returns  inventory for Status 1 items  to populate cart - 
+//API returns  inventory for Status 1 items  to populate cart -
+
 func cartHandlerSmoothies(formatter *render.Render) http.HandlerFunc {
 
 
@@ -211,6 +215,7 @@ func cartHandlerSmoothies(formatter *render.Render) http.HandlerFunc {
 }
 
 //API processes items in cart - Updates status from 1 to 0
+
 func starbucksProcessOrdersHandlerSmoothies(formatter *render.Render) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {		
 
@@ -253,6 +258,7 @@ func starbucksProcessOrdersHandlerSmoothies(formatter *render.Render) http.Handl
 
 
 //API takes in current number of likes and item liked -> returns updated like count(like+1)
+
 func likeHandlerSmoothies(formatter *render.Render) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 
@@ -291,4 +297,15 @@ func likeHandlerSmoothies(formatter *render.Render) http.HandlerFunc {
 
 	}	
 
+}
+
+func main() {
+
+
+http.HandleFunc("/inventorySmoothies", inventoryHandlerSmoothies)
+http.HandleFunc("/cartItemsSmoothies", cartHandlerSmoothies)
+http.HandleFunc("/addToCartSmoothies", starbucksAddToCartHandlerSmoothies)
+http.HandleFunc("/processOrdersSmoothies", starbucksProcessOrdersHandlerSmoothies)
+http.HandleFunc("/likeIncreaseSmoothies", likeHandlerSmoothies)
+http.ListenAndServe(":5000", nil)
 }
