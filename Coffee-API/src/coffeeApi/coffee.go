@@ -1,5 +1,4 @@
 
-
 /*
 	Starbucks API in Go
 
@@ -51,6 +50,9 @@ func initRoutes(mx *mux.Router, formatter *render.Render) {
 	mx.HandleFunc("/searchInventoryCoffee", searchInventoryHandlerCoffee(formatter)).Methods("GET")
 	//Below - PUT : Status 0 - 1
 	mx.HandleFunc("/addToCartCoffee", starbucksAddToCartHandlerCoffee(formatter)).Methods("PUT")
+	//Below - PUT : Status 1 -0
+	mx.HandleFunc("/processOrdersCoffee", starbucksProcessOrdersHandlerCoffee(formatter)).Methods("PUT")
+
 }
 
 
@@ -153,8 +155,8 @@ func starbucksAddToCartHandlerCoffee(formatter *render.Render) http.HandlerFunc 
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		//parsing request bpdy from client and storing in array of bsons
-			var simulation []bson.M
-			json.NewDecoder(req.Body).Decode(&simulation)
+			var coffeeArrays []bson.M
+			json.NewDecoder(req.Body).Decode(&coffeeArrays)
 	    	//fmt.Println("Added items to cart: ", m.starbucks)
 
 		//establishing session with DB
@@ -167,15 +169,15 @@ func starbucksAddToCartHandlerCoffee(formatter *render.Render) http.HandlerFunc 
 	        c := session.DB(mongodb_database).C(mongodb_collection)
 
 
-	  		//this is just for testing purposes. It is a simulation of the request body from the client.
-	        // var simulation []bson.M
-	        // err = c.Find(bson.M{"status":0}).All(&simulation)
+	  		//this is just for testing purposes. It is a coffeeArrays of the request body from the client.
+	        // var coffeeArrays []bson.M
+	        // err = c.Find(bson.M{"status":0}).All(&coffeeArrays)
 	        // if err != nil {
 	        //         log.Fatal(err)
 	        // }
 
 	        //traversing throuhg request body and updating each bson based on condition.
-	        for _, element := range simulation {
+	        for _, element := range coffeeArrays {
 	        	fmt.Println("Item status changing from 0 to 1  :", element )
 	        	query := bson.M{"status":0}
 	        	change := bson.M{"$set": bson.M{ "status" : 1}}
@@ -199,3 +201,55 @@ func starbucksAddToCartHandlerCoffee(formatter *render.Render) http.HandlerFunc 
 
 
 	}
+}
+
+//API processes items in cart - Updates status from 1 to 0
+func starbucksProcessOrdersHandlerCoffee(formatter *render.Render) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+
+		//parsing request bpdy from client and storing in array of bsons
+			// var sim []bson.M
+	  //   	json.NewDecoder(req.Body).Decode(&sim)
+	    	// fmt.Println("Update Gumball Inventory To: ", m.CountGumballs)
+
+		//establishing session with DB
+			session, err := mgo.Dial(mongodb_server)
+	        if err != nil {
+	                panic(err)
+	        }
+	        defer session.Close()
+	        session.SetMode(mgo.Monotonic, true)
+	        c := session.DB(mongodb_database).C(mongodb_collection)
+
+
+	  		//this is just for testing purposes. It is a coffeeArrays of the request body from the client.
+	        var sim []bson.M
+	        err = c.Find(bson.M{"status":1}).All(&sim)
+	        if err != nil {
+	                log.Fatal(err)
+	        }
+
+	        //travering throuhg request body and updating each bson based on condition.
+	        for _, ele := range sim {
+	        	fmt.Println("Item status changing from 1 to 0 :", ele )
+	        	query := bson.M{"status":1}
+	        	change := bson.M{"$set": bson.M{ "status" : 0}}
+
+	        	err = c.Update(query, change)
+	        	if err != nil {
+	                log.Fatal(err)
+	        	}
+
+	        }
+
+	        var results []bson.M
+	        err = c.Find(bson.M{"status":0}).All(&results)
+	        if err != nil {
+	                log.Fatal(err)
+	        }
+
+	        fmt.Println("Items processed:", results )
+			formatter.JSON(w, http.StatusOK, results)
+
+	}
+}
