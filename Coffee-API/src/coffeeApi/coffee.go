@@ -1,4 +1,5 @@
 
+
 /*
 	Starbucks API in Go
 
@@ -23,8 +24,8 @@ import (
 
 // MongoDB Config
 var mongodb_server = "localhost:27017"
-var mongodb_database = "cmpe_Coffee"
-var mongodb_collection = "starbucks_Coffee"
+var mongodb_database = "cmpe_Coffees"
+var mongodb_collection = "starbucks_Coffees"
 
 
 
@@ -44,14 +45,16 @@ func NewServer() *negroni.Negroni {
 
 // API Routes
 func initRoutes(mx *mux.Router, formatter *render.Render) {
-	mx.HandleFunc("/Coffee", homepageHandlerCoffee(formatter)).Methods("GET")
-	mx.HandleFunc("/inventoryCoffee", inventoryHandlerCoffee(formatter)).Methods("GET")
-	mx.HandleFunc("/cartItemsCoffee", cartHandlerCoffee(formatter)).Methods("GET")
-	mx.HandleFunc("/searchInventoryCoffee", searchInventoryHandlerCoffee(formatter)).Methods("GET")
+	mx.HandleFunc("/Coffees", homepageHandlerCoffees(formatter)).Methods("GET")
+	mx.HandleFunc("/inventoryCoffees", inventoryHandlerCoffees(formatter)).Methods("GET")
+	mx.HandleFunc("/cartItemsCoffees", cartHandlerCoffees(formatter)).Methods("GET")
+	mx.HandleFunc("/searchInventoryCoffees", searchInventoryHandlerCoffees(formatter)).Methods("GET")
 	//Below - PUT : Status 0 - 1
-	mx.HandleFunc("/addToCartCoffee", starbucksAddToCartHandlerCoffee(formatter)).Methods("PUT")
+	mx.HandleFunc("/addToCartCoffees", starbucksAddToCartHandlerCoffees(formatter)).Methods("PUT")
 	//Below - PUT : Status 1 -0
-	mx.HandleFunc("/processOrdersCoffee", starbucksProcessOrdersHandlerCoffee(formatter)).Methods("PUT")
+	mx.HandleFunc("/processOrdersCoffees", starbucksProcessOrdersHandlerCoffees(formatter)).Methods("PUT")
+	//Below - Increase Likes
+	mx.HandleFunc("/likeCoffees", likeHandlerCoffees(formatter)).Methods("PUT")
 
 }
 
@@ -68,7 +71,7 @@ func failOnError(err error, msg string) {
 
 
 // Ping Application
-func homepageHandlerCoffee(formatter *render.Render) http.HandlerFunc {
+func homepageHandlerCoffees(formatter *render.Render) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		formatter.JSON(w, http.StatusOK, struct{ Test string }{"Welcome to Starbucks Dessert!"})
 	}
@@ -76,7 +79,7 @@ func homepageHandlerCoffee(formatter *render.Render) http.HandlerFunc {
 
 
 //API returns  inventory for Status 0 items  to populate menu -
-func inventoryHandlerCoffee(formatter *render.Render) http.HandlerFunc {
+func inventoryHandlerCoffees(formatter *render.Render) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		//establishing session with DB
 		fmt.Println("Inventory details:")
@@ -100,7 +103,7 @@ func inventoryHandlerCoffee(formatter *render.Render) http.HandlerFunc {
 
 
 //API returns  inventory for Status 1 items  to populate cart -
-func cartHandlerCoffee(formatter *render.Render) http.HandlerFunc {
+func cartHandlerCoffees(formatter *render.Render) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, req *http.Request) {
 
@@ -127,7 +130,7 @@ func cartHandlerCoffee(formatter *render.Render) http.HandlerFunc {
 
 
 // API seacrhes inventory for a specific item and returns it
-func searchInventoryHandlerCoffee(formatter *render.Render) http.HandlerFunc {
+func searchInventoryHandlerCoffees(formatter *render.Render) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		session, err := mgo.Dial(mongodb_server)
         if err != nil {
@@ -151,7 +154,7 @@ func searchInventoryHandlerCoffee(formatter *render.Render) http.HandlerFunc {
 
 
 //API adds item to cart - Updates status from 0 to 1
-func starbucksAddToCartHandlerCoffee(formatter *render.Render) http.HandlerFunc {
+func starbucksAddToCartHandlerCoffees(formatter *render.Render) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		//parsing request bpdy from client and storing in array of bsons
@@ -204,7 +207,7 @@ func starbucksAddToCartHandlerCoffee(formatter *render.Render) http.HandlerFunc 
 }
 
 //API processes items in cart - Updates status from 1 to 0
-func starbucksProcessOrdersHandlerCoffee(formatter *render.Render) http.HandlerFunc {
+func starbucksProcessOrdersHandlerCoffees(formatter *render.Render) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		//parsing request bpdy from client and storing in array of bsons
@@ -252,4 +255,27 @@ func starbucksProcessOrdersHandlerCoffee(formatter *render.Render) http.HandlerF
 			formatter.JSON(w, http.StatusOK, results)
 
 	}
+}
+
+func likeHandlerCoffees(formatter *render.Render) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+
+		session, err := mgo.Dial(mongodb_server)
+        if err != nil {
+                panic(err)
+        }
+        defer session.Close()
+        session.SetMode(mgo.Monotonic, true)
+        c := session.DB(mongodb_database).C(mongodb_collection)
+        fmt.Println("Adding the like by 1  :")
+        query := bson.M{"likes"}
+	    change := bson.M{"$set": bson.M{ "likes"  }}
+
+	    err = c.Update(query, change)
+	    if err != nil {
+	          log.Fatal(err)
+	    }
+
+	}
+
 }
