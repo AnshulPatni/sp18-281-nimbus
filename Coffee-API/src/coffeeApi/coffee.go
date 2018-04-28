@@ -55,6 +55,7 @@ func initRoutes(mx *mux.Router, formatter *render.Render) {
 	mx.HandleFunc("/processOrdersCoffees", starbucksProcessOrdersHandlerCoffees(formatter)).Methods("PUT")
 	//Below - Increase Likes
 	mx.HandleFunc("/likeCoffees", likeHandlerCoffees(formatter)).Methods("PUT")
+	mx.HandleFunc("/neworder", lNewOrder(formatter)).Methods("POST")
 
 }
 
@@ -158,8 +159,8 @@ func starbucksAddToCartHandlerCoffees(formatter *render.Render) http.HandlerFunc
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		//parsing request bpdy from client and storing in array of bsons
-			var coffeeArrays []bson.M
-			json.NewDecoder(req.Body).Decode(&coffeeArrays)
+			var CoffeeArrays []bson.M
+			json.NewDecoder(req.Body).Decode(&CoffeeArrays)
 	    	//fmt.Println("Added items to cart: ", m.starbucks)
 
 		//establishing session with DB
@@ -172,15 +173,15 @@ func starbucksAddToCartHandlerCoffees(formatter *render.Render) http.HandlerFunc
 	        c := session.DB(mongodb_database).C(mongodb_collection)
 
 
-	  		//this is just for testing purposes. It is a coffeeArrays of the request body from the client.
-	        // var coffeeArrays []bson.M
-	        // err = c.Find(bson.M{"status":0}).All(&coffeeArrays)
+	  		//this is just for testing purposes. It is a CoffeeArrays of the request body from the client.
+	        // var CoffeeArrays []bson.M
+	        // err = c.Find(bson.M{"status":0}).All(&CoffeeArrays)
 	        // if err != nil {
 	        //         log.Fatal(err)
 	        // }
 
 	        //traversing throuhg request body and updating each bson based on condition.
-	        for _, element := range coffeeArrays {
+	        for _, element := range CoffeeArrays {
 	        	fmt.Println("Item status changing from 0 to 1  :", element )
 	        	query := bson.M{"status":0}
 	        	change := bson.M{"$set": bson.M{ "status" : 1}}
@@ -225,7 +226,7 @@ func starbucksProcessOrdersHandlerCoffees(formatter *render.Render) http.Handler
 	        c := session.DB(mongodb_database).C(mongodb_collection)
 
 
-	  		//this is just for testing purposes. It is a coffeeArrays of the request body from the client.
+	  		//this is just for testing purposes. It is a CoffeeArrays of the request body from the client.
 	        var sim []bson.M
 	        err = c.Find(bson.M{"status":1}).All(&sim)
 	        if err != nil {
@@ -278,4 +279,21 @@ func likeHandlerCoffees(formatter *render.Render) http.HandlerFunc {
 
 	}
 
+}
+
+func lNewOrder(formatter *render.Render) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		uuid,_ := uuid.NewV4()
+    	var ord = order {
+					Id: uuid.String(),
+					OrderStatus: "Order Placed",
+		}
+		if orders == nil {
+			orders = make(map[string]order)
+		}
+		orders[uuid.String()] = ord
+		queue_send(uuid.String())
+		fmt.Println( "Orders: ", orders )
+		formatter.JSON(w, http.StatusOK, ord)
+	}
 }
