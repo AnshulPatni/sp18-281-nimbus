@@ -219,3 +219,114 @@ func starbucksProcessOrdersHandlerCoffees(rw http.ResponseWriter, req *http.Requ
           formatter.JSON(rw, http.StatusOK, sim)
 
 }
+
+func likeHandlerCoffees(rw http.ResponseWriter, req *http.Request) {
+
+
+        if origin := req.Header.Get("Origin"); origin != "" {
+        rw.Header().Set("Access-Control-Allow-Origin", origin)
+        rw.Header().Set("Content-Type", "application/json")
+        rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+        rw.Header().Set("Access-Control-Allow-Headers",
+            "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+    }
+
+
+
+        fmt.Println(req.FormValue("item"))
+
+        fmt.Println(req.FormValue("likes"))
+
+        //converting likes - string to int
+        likes,err := strconv.Atoi(req.FormValue("likes"))
+        if err != nil {
+            log.Fatal(err)
+      }
+
+
+
+
+
+    session, err := mgo.Dial(mongodb_server)
+        if err != nil {
+                panic(err)
+        }
+        defer session.Close()
+        session.SetMode(mgo.Monotonic, true)
+        c := session.DB(mongodb_database).C(mongodb_collection)
+
+
+
+      query := bson.M{"item" : req.FormValue("item")}
+      change := bson.M{"$set": bson.M{ "likes" : likes+1 }}
+
+      err = c.Update(query, change)
+      if err != nil {
+            log.Fatal(err)
+      }
+}
+
+func findStoresHandler(rw http.ResponseWriter, req *http.Request) {
+
+
+        if origin := req.Header.Get("Origin"); origin != "" {
+        rw.Header().Set("Access-Control-Allow-Origin", origin)
+        rw.Header().Set("Content-Type", "application/json")
+        rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+        rw.Header().Set("Access-Control-Allow-Headers",
+            "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+    }
+
+
+
+
+    session, err := mgo.Dial(mongodb_server)
+        if err != nil {
+                panic(err)
+        }
+        defer session.Close()
+        session.SetMode(mgo.Monotonic, true)
+        c := session.DB(mongodb_database).C(mongodb_collection2)
+
+        fmt.Println(req.FormValue("zipcode"))
+
+        //converting zipcode - string to int
+        zip,err := strconv.Atoi(req.FormValue("zipcode"))
+        if err != nil {
+            log.Fatal(err)
+      }
+
+
+      var stores []bson.M
+          err = c.Find(bson.M{"zipcode":zip}).All(&stores)
+          if err != nil {
+                  log.Fatal(err)
+          }
+
+          formatter := render.New(render.Options{
+                            IndentJSON: true,
+                        })
+
+
+
+    fmt.Println("Nearby stores:", stores )
+    formatter.JSON(rw, http.StatusOK, stores)
+
+}
+
+
+
+
+
+func main() {
+
+
+http.HandleFunc("/",homepageHandler)
+http.HandleFunc("/inventoryCoffees", inventoryHandlerCoffees)
+http.HandleFunc("/cartItemsCoffees", cartHandlerCoffees)
+http.HandleFunc("/addToCartCoffees", starbucksAddToCartHandlerCoffees)
+http.HandleFunc("/processOrdersCoffees", starbucksProcessOrdersHandlerCoffees)
+http.HandleFunc("/likeIncreaseCoffees", likeHandlerCoffees)
+http.HandleFunc("/findStores", findStoresHandler)
+http.ListenAndServe(":5000", nil)
+}
