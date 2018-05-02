@@ -111,3 +111,111 @@ func cartHandlerCoffees(rw http.ResponseWriter, req *http.Request) {
         formatter.JSON(rw, http.StatusOK, result)
 
 }
+
+func starbucksAddToCartHandlerCoffees(rw http.ResponseWriter, req *http.Request) {
+
+
+        if origin := req.Header.Get("Origin"); origin != "" {
+        rw.Header().Set("Access-Control-Allow-Origin", origin)
+        rw.Header().Set("Content-Type", "application/json")
+        rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+        rw.Header().Set("Access-Control-Allow-Headers",
+            "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+    }
+
+
+
+    //io.WriteString(res, "\nphone: "+req.FormValue("phone"))
+    fmt.Println( "In add to cart!" )
+        //establishing session with DB
+        session, err := mgo.Dial(mongodb_server)
+          if err != nil {
+                  panic(err)
+          }
+          defer session.Close()
+          session.SetMode(mgo.Monotonic, true)
+          c := session.DB(mongodb_database).C(mongodb_collection)
+
+
+
+          query := bson.M{"item":req.FormValue("item")}
+          change := bson.M{"$set": bson.M{ "status" : 1}}
+
+          err = c.Update(query, change)
+          if err != nil {
+            log.Fatal(err)
+          }
+
+
+
+        //this is our result
+          var finalresults []bson.M
+          err = c.Find(bson.M{"status":1}).All(&finalresults)
+          if err != nil {
+                  log.Fatal(err)
+          }
+
+          formatter := render.New(render.Options{
+                            IndentJSON: true,
+                        })
+
+          fmt.Println("Items added to cart:", finalresults )
+          formatter.JSON(rw, http.StatusOK, finalresults)
+
+}
+
+
+
+
+func starbucksProcessOrdersHandlerCoffees(rw http.ResponseWriter, req *http.Request) {
+
+
+        if origin := req.Header.Get("Origin"); origin != "" {
+        rw.Header().Set("Access-Control-Allow-Origin", origin)
+        rw.Header().Set("Content-Type", "application/json")
+        rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+        rw.Header().Set("Access-Control-Allow-Headers",
+            "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+    }
+
+
+        //establishing session with DB
+      session, err := mgo.Dial(mongodb_server)
+          if err != nil {
+                  panic(err)
+          }
+          defer session.Close()
+          session.SetMode(mgo.Monotonic, true)
+          c := session.DB(mongodb_database).C(mongodb_collection)
+
+
+        //this is just for testing purposes. It is a simulation of the request body from the client.
+          var sim []bson.M
+          err = c.Find(bson.M{ "status" : 1}).All(&sim)
+          if err != nil {
+                  log.Fatal(err)
+          }
+
+          //travering throuhg request body and updating each bson based on condition.
+          for _, ele := range sim {
+            fmt.Println("Item status changing from 1 to 0 :", ele )
+            query := bson.M{"status" : 1}
+            change := bson.M{"$set": bson.M{ "status" : 0}}
+
+            err = c.Update(query, change)
+            if err != nil {
+                  log.Fatal(err)
+            }
+
+          }
+
+                    formatter := render.New(render.Options{
+                            IndentJSON: true,
+                        })
+
+
+
+          fmt.Println("Items processed:", sim )
+          formatter.JSON(rw, http.StatusOK, sim)
+
+}
