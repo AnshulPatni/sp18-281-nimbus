@@ -1,6 +1,6 @@
-# API 4
+# API
 
-## 4. DESSERTS
+## DESSERTS
 
 1. **Title** : homepageHandler
 I.	Description : API redirects to the application homepage
