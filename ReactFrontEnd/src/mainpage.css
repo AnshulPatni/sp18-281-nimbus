@@ -1,0 +1,71 @@
+.html {
+  background-color: gray;
+}
+
+.mainpage {
+  min-height: 810px;
+}
+
+#root {
+  background-color: #FFFAFA;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.header {
+  background-color: black;
+  min-height: 70px;
+}
+
+.content {
+  padding-top: 30px;
+  max-width: 95%;
+  text-align: center;
+  font-family: 'Lato', sans-serif;
+  min-height: 460px;
+}
+
+.left {
+  height: auto;
+  min-height: 460px;
+
+}
+
+.middle{
+  height: auto;
+  min-height: 460px;
+
+}
+
+.right{
+  background-color: #262228;
+  min-height: 460px;
+  color: white;
+}
+
+
+.tea, .coffee, .bread, .snacks, .desserts {
+  height: 60px;
+  background-color: #00743F;
+  border: 1px solid lime;
+  padding: 8%;
+  font-size: 20px;
+}
+
+
+.content1 {
+
+}
+
+.items-cart-text {
+  font-family: 'Lato', sans-serif;
+  font-weight: 900;
+}
+
+.nav-link {
+  font-family: 'Lato', sans-serif;
+  font-weight: 900;
+  margin-left: 30px;
+  font-size: 20px;
+}
