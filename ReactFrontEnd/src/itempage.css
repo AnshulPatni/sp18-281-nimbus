@@ -1,0 +1,14 @@
+.coffeerow {
+  border: 1px solid gray;
+  background-color: #0444BF;
+  color: white;
+}
+
+.desc {
+  padding: 10px;
+}
+
+.buttonAdd {
+  padding-top: 20px;
+  padding-bottom: 30px;
+}

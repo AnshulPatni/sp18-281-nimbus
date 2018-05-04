@@ -1,0 +1,8 @@
+.footerPage {
+  height: auto;
+  background-color: #040C0E;
+  width: 100%;
+  position: relative;
+  bottom: -80px;
+  margin-top: 10px;
+}
